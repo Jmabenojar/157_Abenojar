@@ -1,0 +1,80 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Seed for randomization for the noise and data point splitting
+seednumber=1298346
+seednumber=241295
+seedsplit=42
+np.random.seed(seednumber)
+
+rawr=[40,100,160]
+for datapoints in rawr:
+    noisevariance=0.1
+    noise=np.random.normal(0,noisevariance,datapoints) #Create the noise array
+    x_array=np.linspace(0,3,datapoints) #Create array for the x-values(0<=x<=3)
+
+    def func(x):
+        #Function that returns f(x) without noise
+        return(x*np.sin(x))
+    y_array=func(x_array) # xsin(x) for the x values 0<=x<=3
+    y_array_noise=y_array+noise # Add noise to xsin(x)
+
+    # Scatter plot of the data set with the graph of xsin(x)
+    """plt.scatter(x_array,y_array_noise, label="Data points with noise",marker="x",color="blue") # Data points with noise
+    plt.plot(x_array,y_array, label="x sin(x)",color="black") # Graph of x sin(x)
+    plt.ylabel('y-axis')
+    plt.xlabel('x-axis')
+    plt.title("Complete Data set")
+    plt.legend()
+    plt.show()"""
+    from sklearn.model_selection import train_test_split
+    x=x_array
+    y=y_array_noise
+    # Splits the generated data into Training data and "the rest"
+    x_extra,x_train,y_extra,y_train=train_test_split(x_array,y_array_noise,random_state=seedsplit,train_size=0.5,test_size=0.5)
+
+    #Splits "the rest" into testing and CV data
+    x_test,x_cv,y_test,y_cv=train_test_split(x_extra,y_extra,random_state=seedsplit,train_size=0.5,test_size=0.5)
+
+    # Prints the number of data points in training, testing, and cross validation for x and y(for verification)
+    print(f"For x data points the number of data points are, \nTrain: {len(x_train)}; Test: {len(x_test)}; Cross Validation: {len(x_cv)}")
+    print(f"For y data points the number of data points are, \nTrain: {len(y_train)}; Test: {len(y_test)}; Cross Validation: {len(y_cv)}")
+
+    # Plots the training, testing, and cross validation data
+    """plt.scatter(x_train,y_train, label="Train",marker="x")
+    plt.scatter(x_cv,y_cv, label="Cross Validation",marker="x")
+    plt.scatter(x_test,y_test, label="test",marker="x")
+    plt.ylabel('y-axis')
+    plt.xlabel('x-axis')
+    plt.title("Toy Data set")
+    plt.legend()
+    plt.show()"""
+
+    ## Generate the fit and get the errors
+    max_degree=20 # Max degree
+    error_template=np.arange(max_degree+1) #x-axis for degree vs error graph
+    training_error=[ ] # for training error vs degree graph
+    cv_error=[ ] # for cross validation error vs degree graph
+    test_error=[ ] # for testing error vs degree graph
+    for i in range(max_degree+1):
+        degree=i # degree to be used for polyfit
+        a=np.polyfit(x_train,y_train,degree) # gives the coefficients of the polynomial
+        b=np.poly1d(a) # converts a poly to function that can be substituted using b(x)
+        # Root mean square Error computation for the three data points
+        training_error.append(np.sqrt((np.sum((y_train-b(x_train))**2))/len(x_train)))
+        cv_error.append(np.sqrt((np.sum((y_cv-b(x_cv))**2))/len(x_cv)))
+        test_error.append(np.sqrt((np.sum((y_test-b(x_test))**2))/len(x_test)))
+
+    # Plots the Training Error and Cross Validation Error for different degrees
+    if datapoints==100:
+        plt.plot(error_template,training_error,label="Training("+str(datapoints)+" Datapoints)", marker='x')
+    plt.plot(error_template,cv_error,label="Cross validation error("+str(datapoints)+" Datapoints)", marker='x')
+    plt.plot(error_template,noisevariance*np.ones(max_degree+1),linestyle='dashed',color='gray')
+    plt.xlabel('Degree')
+    plt.ylabel('RMSE')
+    plt.title('RMSE vs Polynomial degree graph for '+str(datapoints)+' Datapoints')
+    plt.legend()
+    plt.xticks(np.arange(0,20,1))
+    plt.yticks(np.arange(0,1.5,0.1))
+    plt.ylim((0,1.5))
+plt.show()

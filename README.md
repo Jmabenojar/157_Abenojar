@@ -1,3 +1,1 @@
-nadagdagan rin dito
-Hello world
-wow nagdagdagan
+This repository functions as my submission for Applied Physics 157
